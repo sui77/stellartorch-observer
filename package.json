@@ -1,0 +1,15 @@
+{
+  "name": "stellartorch-observer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "keybase-bot": "^2.0.6",
+    "stellar-sdk": "^2.1.1"
+  }
+}
