@@ -1,22 +1,19 @@
+const axios = require("axios");
 const Bot = require('keybase-bot')
 const StellarSdk = require('stellar-sdk');
 
 StellarSdk.Network.usePublicNetwork();
 
-const keybaseUsername = 'suibot';
-const keybasePaperkey = 'door ...';
-const keybaseChannel = {name: 'sui_zabbix', membersType: 'team', topicName: 'alerts'}
+const config = require('./config.js');
 
-const accountId = 'GB2P5P4EOYFJW2DSAHJQO7TXTBZZSH4CAS6M5TYM5EJRH7VQTQL7T2KC';
-
-const horizon = new StellarSdk.Server('https://horizon.stellar.org');
+const horizon = new StellarSdk.Server(config.stellar.horizonUrl);
 
 const bot = new Bot();
 bot
-    .init(keybaseUsername, keybasePaperkey, {verbose: false})
+    .init(config.keybase.username, config.keybase.paperkey, {verbose: false})
     .then(() => {
         console.log(`Your bot is initialized. It is logged in as ${bot.myInfo().username}`);
-        observe(accountId);
+        observe(config.stellar.accountId);
     })
     .catch(error => {
         console.error(error)
@@ -37,12 +34,17 @@ function observe(accountId) {
                         tx = await op.transaction();
                         if (typeof tx.memo == "string") {
 
-                            let found = tx.memo.match(/[0-9\.]+ *, *[0-9\.]+/);
+                            let found = tx.memo.match(/[\-0-9\.]+ *, *[\-0-9\.]+/);
                             if (found) {
-                                let text = "Stellartorch sent from " + op.from + " to " + op.to + " coords: " + found[0].replace(' ', '');
-                                sendMessage(text);
                                 observe(op.to);
                                 opStream();  // close current stream
+
+                                let loc = await getLocationName(found[0].replace(' ', ''));
+                                let text = "> *From:* " + op.from +
+                                    "\n> *To:* " + op.to +
+                                    "\n> *Coordinates:* " + found[0].replace(' ', '') +
+                                    "\n> *Location:* " + loc;
+                                sendMessage(text);
                             }
                         }
                     }
@@ -56,11 +58,33 @@ function observe(accountId) {
 
 function sendMessage(msg) {
     bot.chat
-        .send(keybaseChannel, {body: msg})
+        .send(config.keybase.channel, {body: msg})
         .then(() => {
             console.log('Message sent!')
         })
         .catch(error => {
             console.error(error)
         })
+}
+
+async function getLocationName(q) {
+    d = await axios.get('https://api.opencagedata.com/geocode/v1/json?key=' + config.opencagedata.apiKey + '&q=' + q + '&no_annotations=1');
+    let r = d.data.results[0].components;
+    let resultString = '';
+    if (typeof r.village != 'undefined') {
+        resultString += r.village + ", ";
+    } else if (typeof r.town != 'undefined') {
+        resultString += r.town + ", ";
+    } else if (typeof r.city != 'undefined') {
+        resultString += r.city + ", ";
+    } else if (typeof r.county != 'undefined') {
+        resultString += r.county + ", ";
+    }
+
+    if (typeof r.country != 'undefined') {
+        resultString += r.country;
+    }
+
+    return resultString;
+
 }
