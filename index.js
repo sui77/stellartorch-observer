@@ -68,7 +68,7 @@ function sendMessage(msg) {
 }
 
 async function getLocationName(q) {
-    let resultString = '?';
+    let resultString = '';
     try {
         d = await axios.get('https://api.opencagedata.com/geocode/v1/json?key=' + config.opencagedata.apiKey + '&q=' + q + '&no_annotations=1');
 
@@ -82,6 +82,8 @@ async function getLocationName(q) {
             resultString = r.city + ", ";
         } else if (typeof r.county != 'undefined') {
             resultString = r.county + ", ";
+        } else if (typeof r.state != 'undefined') {
+            resultString = r.state + ", ";
         }
 
         if (typeof r.country != 'undefined') {
