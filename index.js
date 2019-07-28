@@ -68,21 +68,27 @@ function sendMessage(msg) {
 }
 
 async function getLocationName(q) {
-    d = await axios.get('https://api.opencagedata.com/geocode/v1/json?key=' + config.opencagedata.apiKey + '&q=' + q + '&no_annotations=1');
-    let r = d.data.results[0].components;
-    let resultString = '';
-    if (typeof r.village != 'undefined') {
-        resultString += r.village + ", ";
-    } else if (typeof r.town != 'undefined') {
-        resultString += r.town + ", ";
-    } else if (typeof r.city != 'undefined') {
-        resultString += r.city + ", ";
-    } else if (typeof r.county != 'undefined') {
-        resultString += r.county + ", ";
-    }
+    let resultString = '?';
+    try {
+        d = await axios.get('https://api.opencagedata.com/geocode/v1/json?key=' + config.opencagedata.apiKey + '&q=' + q + '&no_annotations=1');
 
-    if (typeof r.country != 'undefined') {
-        resultString += r.country;
+        let r = d.data.results[0].components;
+
+        if (typeof r.village != 'undefined') {
+            resultString = r.village + ", ";
+        } else if (typeof r.town != 'undefined') {
+            resultString = r.town + ", ";
+        } else if (typeof r.city != 'undefined') {
+            resultString = r.city + ", ";
+        } else if (typeof r.county != 'undefined') {
+            resultString = r.county + ", ";
+        }
+
+        if (typeof r.country != 'undefined') {
+            resultString += r.country;
+        }
+    } catch (e) {
+
     }
 
     return resultString;
